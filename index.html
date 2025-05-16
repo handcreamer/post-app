@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>投稿アプリ（保存＋スマホ対応＋ボタン改善）</title>
+  <title>投稿アプリ（BGM付き）</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -96,7 +96,10 @@
 </head>
 <body>
 
-  <h1>投稿アプリ（保存＋スマホ対応＋ボタン改善）</h1>
+  <h1>投稿アプリ（BGM付き）</h1>
+
+  <!-- ✅ BGM再生（MP3ファイルをアップロードしておくこと） -->
+  <audio src="bgm.mp3" autoplay loop hidden></audio>
 
   <textarea id="inputText" placeholder="つぶやいてみよう！"></textarea><br>
   <select id="replySetting">
