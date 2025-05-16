@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>投稿アプリ（BGM付き）</title>
+  <title>投稿アプリ（BGM付き＋音量調整＋停止ボタン）</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -74,6 +74,13 @@
       border: none;
     }
 
+    .bgm-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
     @media (max-width: 768px) {
       .container {
         flex-direction: column;
@@ -98,9 +105,13 @@
 
   <h1>投稿アプリ（BGM付き）</h1>
 
-  <!-- ✅ BGM自動再生 -->
-  <audio src="人狼の為の子守唄.mp3" autoplay loop controls></audio>
-
+  <!-- ✅ BGM 再生＆音量コントロール -->
+  <div class="bgm-controls">
+    <button id="toggleBgm">再生🎵</button>
+    <label for="volume">音量</label>
+    <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5">
+  </div>
+  <audio id="bgm" src="人狼の為の子守唄.mp3" loop></audio>
 
   <textarea id="inputText" placeholder="つぶやいてみよう！"></textarea><br>
   <select id="replySetting">
@@ -125,6 +136,27 @@
   </div>
 
   <script>
+    const bgm = document.getElementById("bgm");
+    const toggleBtn = document.getElementById("toggleBgm");
+    const volumeSlider = document.getElementById("volume");
+
+    let isPlaying = false;
+
+    toggleBtn.addEventListener("click", () => {
+      if (isPlaying) {
+        bgm.pause();
+        toggleBtn.textContent = "再生🎵";
+      } else {
+        bgm.play();
+        toggleBtn.textContent = "停止⏸️";
+      }
+      isPlaying = !isPlaying;
+    });
+
+    volumeSlider.addEventListener("input", () => {
+      bgm.volume = volumeSlider.value;
+    });
+
     let userId = localStorage.getItem("userId");
     if (!userId) {
       userId = crypto.randomUUID();
