@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>いいね＋返信 投稿アプリ</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    textarea, select {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .column {
+      width: 33%;
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    .post {
+      background: white;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .reply {
+      background: #f0f0f0;
+      margin-top: 6px;
+      padding: 6px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    .like-btn {
+      margin-top: 6px;
+      display: inline-block;
+      background-color: #ffd700;
+      color: black;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>投稿アプリ（いいね + 返信オン/オフ対応）</h1>
+
+  <textarea id="inputText" placeholder="つぶやいてみよう！"></textarea>
+  <br>
+  <select id="replySetting">
+    <option value="true">返信を受け付ける</option>
+    <option value="false">返信を受け付けない</option>
+  </select>
+  <br>
+  <button onclick="submitPost()">投稿</button>
+
+  <div class="container">
+    <div class="column">
+      <h3>🌍 みんなのつぶやき</h3>
+      <div id="allPosts"></div>
+    </div>
+    <div class="column">
+      <h3>🧑‍💬 自分のつぶやき</h3>
+      <div id="myPosts"></div>
+    </div>
+    <div class="column">
+      <h3>💬 返信欄</h3>
+      <div id="replyArea">投稿をクリックして返信しよう！</div>
+    </div>
+  </div>
+
+  <script>
+    let allPosts = [];
+    let selectedPost = null;
+
+    function submitPost() {
+      const input = document.getElementById("inputText");
+      const replyOption = document.getElementById("replySetting");
+      const text = input.value.trim();
+      if (text === "") return;
+
+      const post = {
+        id: Date.now().toString(),
+        text: text,
+        time: new Date().toLocaleString(),
+        isMine: true,
+        canReply: replyOption.value === "true",
+        replies: [],
+        likes: 0
+      };
+
+      allPosts.unshift(post);
+      input.value = "";
+      renderPosts();
+    }
+
+    function renderPosts() {
+      const allDiv = document.getElementById("allPosts");
+      const myDiv = document.getElementById("myPosts");
+
+      allDiv.innerHTML = "";
+      myDiv.innerHTML = "";
+
+      let likedPosts = [];
+      try {
+        likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
+      } catch (e) {
+        likedPosts = [];
+      }
+
+      allPosts.forEach(post => {
+        const postEl = document.createElement("div");
+        postEl.className = "post";
+        postEl.innerHTML = `
+          <strong>${post.text}</strong><br>
+          <small>${post.time}</small><br>
+          <em>${post.canReply ? "✉️ 返信可" : "🔒 返信不可"}</em><br>
+        `;
+
+        const likeBtn = document.createElement("button");
+        likeBtn.className = "like-btn";
+        likeBtn.textContent = `⭐ ${post.likes}`;
+
+        const alreadyLiked = likedPosts.includes(post.id);
+
+        if (alreadyLiked) {
+          likeBtn.disabled = true;
+          likeBtn.style.opacity = 0.6;
+          likeBtn.style.cursor = "not-allowed";
+          likeBtn.title = "1回しか押せません";
+        }
+
+        likeBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (alreadyLiked) return;
+
+          post.likes++;
+          likedPosts.push(post.id);
+          localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
+          renderPosts();
+        };
+
+        postEl.appendChild(likeBtn);
+
+        if (post.canReply) {
+          postEl.onclick = () => openReplyArea(post);
+        } else {
+          postEl.classList.add("disabled");
+          postEl.onclick = () => alert("この投稿は返信を受け付けていません。");
+        }
+
+        if (post.isMine) {
+          myDiv.appendChild(postEl);
+        } else {
+          allDiv.appendChild(postEl);
+        }
+      });
+    }
+
+    function openReplyArea(post) {
+      selectedPost = post;
+
+      const area = document.getElementById("replyArea");
+      area.innerHTML = "";
+
+      const header = document.createElement("div");
+      header.innerHTML = `<strong>${post.text}</strong><br><small>${post.time}</small>`;
+      area.appendChild(header);
+
+      if (!post.canReply) {
+        const msg = document.createElement("p");
+        msg.textContent = "この投稿は返信できません。";
+        area.appendChild(msg);
+        return;
+      }
+
+      const input = document.createElement("textarea");
+      input.placeholder = "返信を入力...";
+      input.style.marginTop = "10px";
+
+      const btn = document.createElement("button");
+      btn.textContent = "返信";
+      btn.onclick = () => {
+        const replyText = input.value.trim();
+        if (replyText) {
+          post.replies.push({
+            text: replyText,
+            time: new Date().toLocaleString()
+          });
+          input.value = "";
+          openReplyArea(post);
+        }
+      };
+
+      area.appendChild(input);
+      area.appendChild(btn);
+
+      if (post.replies.length > 0) {
+        post.replies.forEach(reply => {
+          const replyDiv = document.createElement("div");
+          replyDiv.className = "reply";
+          replyDiv.innerHTML = `<div>${reply.text}</div><small>${reply.time}</small>`;
+          area.appendChild(replyDiv);
+        });
+      }
+    }
+
+    renderPosts();
+  </script>
+
+</body>
+</html>
