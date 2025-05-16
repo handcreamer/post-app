@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>投稿アプリ（保存＋スマホ対応）</title>
+  <title>投稿アプリ（保存＋スマホ対応＋ボタン改善）</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,6 +15,21 @@
       font-size: 16px;
       margin-bottom: 10px;
     }
+
+    .post-btn {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+    .post-btn:hover {
+      background-color: #45a049;
+    }
+
     .container {
       display: flex;
       gap: 20px;
@@ -59,7 +74,6 @@
       border: none;
     }
 
-    /* ✅ スマホ対応（幅768px以下） */
     @media (max-width: 768px) {
       .container {
         flex-direction: column;
@@ -73,19 +87,23 @@
       .like-btn {
         font-size: 16px;
       }
+      .post-btn {
+        width: 100%;
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <h1>投稿アプリ（保存＋スマホ対応）</h1>
+  <h1>投稿アプリ（保存＋スマホ対応＋ボタン改善）</h1>
 
   <textarea id="inputText" placeholder="つぶやいてみよう！"></textarea><br>
   <select id="replySetting">
     <option value="true">返信を受け付ける</option>
     <option value="false">返信を受け付けない</option>
   </select><br>
-  <button onclick="submitPost()">投稿</button>
+  <button class="post-btn" onclick="submitPost()">投稿</button>
 
   <div class="container">
     <div class="column">
@@ -103,14 +121,12 @@
   </div>
 
   <script>
-    // ✅ 匿名ユーザーIDの生成
     let userId = localStorage.getItem("userId");
     if (!userId) {
       userId = crypto.randomUUID();
       localStorage.setItem("userId", userId);
     }
 
-    // ✅ 投稿データの読み込み
     let allPosts = [];
     try {
       allPosts = JSON.parse(localStorage.getItem("allPosts")) || [];
