@@ -3,123 +3,110 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>匿名つぶやきアプリ</title>
+  <title>つぶやきアプリ</title>
   <style>
-    /* ★ 次のパート2でCSSを入れる */
-    body {
+    /* ← パート2で入れるCSS */
+   body {
   font-family: sans-serif;
   margin: 0;
-  padding-bottom: 80px; /* ナビバーぶん余白 */
-  background: #f9f9f9;
+  padding-bottom: 80px;
+  background: #f4f4f4;
 }
 
-textarea {
+#postForm, #viewContainer, #likedPostsContainer {
+  padding: 10px;
+}
+
+textarea, select {
+  width: 100%;
   font-size: 16px;
+  margin-top: 5px;
+  padding: 8px;
+  box-sizing: border-box;
 }
 
+/* ✅ 投稿・返信ボタンを緑色に！ */
 button {
-  font-size: 16px;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
   background-color: #4CAF50;
   color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
 }
 
 button:hover {
   background-color: #45a049;
 }
 
+/* 🟡 いいねボタン用 */
+.like-btn {
+  background: gold;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 12px;
+  margin-top: 5px;
+  color: black;
+}
+
+/* 🗑️ 削除ボタン用 */
+.delete-btn {
+  background: crimson;
+  color: white;
+  border: none;
+  margin-left: 5px;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+/* 📄 投稿カード */
 .post {
   background: white;
-  border-radius: 6px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
   padding: 10px;
   margin-bottom: 10px;
-  border: 1px solid #ccc;
 }
 
-.post-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.post-meta {
-  font-size: 12px;
-  color: #555;
-}
-
+/* 💬 返信表示 */
 .reply {
-  margin-top: 10px;
-  margin-left: 20px;
   background: #eee;
-  border-radius: 4px;
+  margin-left: 20px;
+  margin-top: 5px;
   padding: 6px;
+  border-radius: 4px;
 }
 
-.like-btn {
-  background-color: #ffd700;
-  color: black;
-  padding: 2px 6px;
-  border-radius: 12px;
-  font-size: 14px;
-  margin-top: 6px;
+/* 🔽 ナビゲーションバー */
+#nav {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #ddd;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
 }
 
-.delete-btn {
-  background-color: #d9534f;
-  margin-left: 10px;
+#nav button {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #333;
 }
 
-.reaction-summary {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
+/* 🌟 リアクション上部バー */
 .reaction-topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
 }
 
-.badge {
-  background: red;
-  color: white;
-  font-size: 12px;
-  padding: 2px 6px;
-  border-radius: 999px;
-  margin-left: 5px;
-}
-
-/* ナビボタン特化 */
-#nav button {
-  background-color: transparent;
-  border: none;
-  color: #333;
-  font-size: 18px;
-  flex: 1;
-}
-
-#nav button.active {
-  color: #4CAF50;
+.reaction-summary {
   font-weight: bold;
 }
 
-@media (max-width: 768px) {
-  textarea {
-    font-size: 18px;
-  }
-
-  button {
-    font-size: 18px;
-  }
-
-  #nav button {
-    font-size: 20px;
-  }
-}
 
   </style>
 </head>
@@ -128,162 +115,114 @@ button:hover {
   <!-- 🎵 BGM プレイヤー -->
   <audio id="bgm" loop>
     <source src="人狼の為の子守唄.mp3" type="audio/mp3" />
-    あなたのブラウザは audio タグをサポートしていません。
   </audio>
-  <div style="padding: 5px;">
-    🔊 BGM:
-    <button onclick="toggleBgm()">▶ / ⏸</button>
+  <div>
+    🔊 BGM: <button onclick="toggleBgm()">▶/⏸</button>
     <input type="range" min="0" max="1" step="0.01" value="0.5" onchange="setVolume(this.value)">
   </div>
 
   <!-- 📝 投稿フォーム -->
-  <div id="postForm" style="padding: 10px;">
-    <textarea id="inputText" placeholder="つぶやいてみよう！" rows="3" style="width: 100%;"></textarea>
-    <select id="replySetting" style="width: 100%; margin-top: 5px;">
+  <div id="postForm">
+    <textarea id="inputText" placeholder="つぶやいてみよう！"></textarea>
+    <select id="replySetting">
       <option value="true">返信を受け付ける</option>
       <option value="false">返信を受け付けない</option>
     </select>
-    <button onclick="submitPost()" style="margin-top: 5px; width: 100%;">投稿</button>
+    <button onclick="submitPost()">投稿</button>
   </div>
+  <!-- 🗨️ 投稿表示エリア -->
+  <div id="viewContainer"></div>
 
-  <!-- 🗨️ 表示エリア -->
-  <div id="viewContainer" style="padding: 10px;"></div>
-
-  <!-- ⭐ 自分がいいねした投稿一覧（リアクション→ボタンで遷移） -->
-  <div id="likedPostsContainer" style="display:none; padding:10px;">
+  <!-- ⭐ 自分がいいねした投稿（送信履歴） -->
+  <div id="likedPostsContainer" style="display:none;">
     <h3>⭐ 自分がいいねした投稿</h3>
     <div id="likedPostsList"></div>
     <button onclick="backToReactions()">← リアクションへ戻る</button>
   </div>
 
-  <!-- 🔻 ナビゲーション -->
-  <div id="nav" style="position: fixed; bottom: 0; left: 0; width: 100%; display: flex; justify-content: space-around; background: #eee; padding: 10px 0;">
-    <button onclick="switchView('all')">🗨️ つぶやき</button>
-    <button onclick="switchView('mine')">🌟 リアクション</button>
-    <button onclick="switchView('messages')" id="messageTab">💌 メッセージ</button>
+  <!-- 🔻 ナビゲーションバー -->
+  <div id="nav">
+    <button onclick="switchView('all')">🗨️つぶやき</button>
+    <button onclick="switchView('mine')">🌟リアクション</button>
+    <button onclick="switchView('messages')" id="messageTab">💌メッセージ</button>
   </div>
 
+  <!-- 🔚 スクリプト開始タグ（次でJavaScript挿入） -->
   <script>
-    // ★ パート3・4でスクリプトを入れる
-    // 自分のユーザーID（保存＆読み込み）
-let userId = localStorage.getItem("userId");
-if (!userId) {
-  userId = crypto.randomUUID();
-  localStorage.setItem("userId", userId);
-}
+    // ここにパート4でJavaScriptを貼る！
+    let userId = localStorage.getItem("userId") || crypto.randomUUID();
+localStorage.setItem("userId", userId);
 
-// 投稿データの読み込み
-let allPosts = [];
-try {
-  allPosts = JSON.parse(localStorage.getItem("allPosts")) || [];
-} catch {
-  allPosts = [];
-}
-
-// 自分が⭐した投稿IDリスト
+let allPosts = JSON.parse(localStorage.getItem("allPosts") || "[]");
 let likedPostIds = JSON.parse(localStorage.getItem("likedPostIds") || "[]");
 
-// 未読返信・未読リアクション記録
-let replyNotice = JSON.parse(localStorage.getItem("replyNotice") || "{}");
-let likeNotice = JSON.parse(localStorage.getItem("likeNotice") || "{}");
-
-// 音量設定
 const bgm = document.getElementById("bgm");
 bgm.volume = 0.5;
 function toggleBgm() {
-  if (bgm.paused) {
-    bgm.play();
-  } else {
-    bgm.pause();
-  }
+  if (bgm.paused) bgm.play();
+  else bgm.pause();
 }
-function setVolume(value) {
-  bgm.volume = parseFloat(value);
+function setVolume(val) {
+  bgm.volume = parseFloat(val);
 }
 
-// 投稿する
 function submitPost() {
-  const input = document.getElementById("inputText");
-  const replyOption = document.getElementById("replySetting");
-  const text = input.value.trim();
-  if (text === "") return;
-
+  const text = document.getElementById("inputText").value.trim();
+  if (!text) return;
+  const canReply = document.getElementById("replySetting").value === "true";
   const post = {
     id: Date.now().toString(),
     text,
     time: new Date().toLocaleString(),
     userId,
-    canReply: replyOption.value === "true",
+    canReply,
     replies: [],
     likes: 0,
     likesBy: []
   };
-
   allPosts.unshift(post);
-  savePosts();
-  input.value = "";
-  switchView(currentView); // 再描画
+  localStorage.setItem("allPosts", JSON.stringify(allPosts));
+  document.getElementById("inputText").value = "";
+  switchView(currentView);
 }
 
-// 投稿保存
-function savePosts() {
-  localStorage.setItem("allPosts", JSON.stringify(allPosts));
-}
 let currentView = "all";
 
-// メイン画面の表示切り替え
 function switchView(view) {
   currentView = view;
-
   document.getElementById("viewContainer").style.display = "block";
   document.getElementById("likedPostsContainer").style.display = "none";
-
   const viewDiv = document.getElementById("viewContainer");
   viewDiv.innerHTML = "";
 
-  // ナビボタンの選択表示
-  document.querySelectorAll("#nav button").forEach(btn => btn.classList.remove("active"));
   if (view === "all") {
     renderPosts(allPosts.filter(p => p.userId !== userId), viewDiv);
-    document.querySelector("#nav button:nth-child(1)").classList.add("active");
   } else if (view === "mine") {
     const myPosts = allPosts.filter(p => p.userId === userId);
     let totalLikes = myPosts.reduce((sum, p) => sum + p.likes, 0);
 
     const topBar = document.createElement("div");
     topBar.className = "reaction-topbar";
-    topBar.innerHTML = `<div class="reaction-summary">これまでのリアクション：⭐${totalLikes}</div>
-      <button onclick="showLikedPosts()">💫受信履歴</button>`;
+    topBar.innerHTML = `<div class="reaction-summary">もらった⭐の数<br><div style="font-size:24px;">${totalLikes}</div></div>
+      <button onclick="showLikedPosts()">送った</button>`;
     viewDiv.appendChild(topBar);
 
-    renderPosts(myPosts, viewDiv);
-    document.querySelector("#nav button:nth-child(2)").classList.add("active");
-  } else if (view === "messages") {
-    const repliedToMe = allPosts.filter(p => p.userId === userId && p.replies.length > 0);
-    renderMessages(repliedToMe, viewDiv);
-    document.querySelector("#nav button:nth-child(3)").classList.add("active");
+    const heading = document.createElement("h3");
+    heading.textContent = "自分のつぶやき";
+    viewDiv.appendChild(heading);
 
-    // 未読フラグを消す
-    document.getElementById("messageTab").innerHTML = "💌 メッセージ";
-    localStorage.setItem("replyNotice", "{}");
+    renderPosts(myPosts, viewDiv);
+  } else if (view === "messages") {
+    const messages = allPosts.filter(p => p.userId === userId && p.replies.length > 0);
+    renderMessages(messages, viewDiv);
   }
 }
 
-// 投稿一覧表示
 function renderPosts(posts, container) {
-  container.innerHTML = "";
-
   posts.forEach(post => {
     const postEl = document.createElement("div");
     postEl.className = "post";
-
-    const header = document.createElement("div");
-    header.className = "post-header";
-    header.innerHTML = `
-      <div><strong>${post.text}</strong></div>
-      <div class="post-meta">${post.time}</div>
-    `;
-    postEl.appendChild(header);
+    postEl.innerHTML = `<strong>${post.text}</strong><br><small>${post.time}</small><br>`;
 
     const likeBtn = document.createElement("button");
     likeBtn.className = "like-btn";
@@ -298,10 +237,8 @@ function renderPosts(posts, container) {
       post.likes++;
       post.likesBy.push(userId);
       likedPostIds.push(post.id);
-      likeNotice[post.id] = true;
       localStorage.setItem("likedPostIds", JSON.stringify(likedPostIds));
-      localStorage.setItem("likeNotice", JSON.stringify(likeNotice));
-      savePosts();
+      localStorage.setItem("allPosts", JSON.stringify(allPosts));
       switchView(currentView);
     };
     postEl.appendChild(likeBtn);
@@ -311,81 +248,66 @@ function renderPosts(posts, container) {
       delBtn.className = "delete-btn";
       delBtn.textContent = "🗑️";
       delBtn.onclick = () => {
-        if (confirm("本当に削除しますか？")) {
+        if (confirm("削除していい？")) {
           allPosts = allPosts.filter(p => p.id !== post.id);
-          savePosts();
+          localStorage.setItem("allPosts", JSON.stringify(allPosts));
           switchView(currentView);
         }
       };
       postEl.appendChild(delBtn);
     }
 
-    if (post.canReply) {
-      postEl.onclick = () => openReplyArea(post, postEl);
+    if (post.canReply && post.userId !== userId) {
+      postEl.onclick = () => {
+        if (postEl.querySelector("textarea")) return;
+        const input = document.createElement("textarea");
+        input.placeholder = "返信を入力...";
+        const btn = document.createElement("button");
+        btn.textContent = "返信";
+        btn.onclick = () => {
+          const txt = input.value.trim();
+          if (!txt) return;
+          post.replies.push({
+            text: txt,
+            time: new Date().toLocaleString(),
+            from: userId
+          });
+          localStorage.setItem("allPosts", JSON.stringify(allPosts));
+          switchView(currentView);
+        };
+        postEl.appendChild(input);
+        postEl.appendChild(btn);
+      };
     }
 
-    // 返信表示
     if (post.replies.length > 0) {
-      const repliesEl = document.createElement("div");
       post.replies.forEach(reply => {
         const replyEl = document.createElement("div");
         replyEl.className = "reply";
         replyEl.innerHTML = `<div>${reply.text}</div><small>${reply.time}</small>`;
-        repliesEl.appendChild(replyEl);
+        postEl.appendChild(replyEl);
       });
-      postEl.appendChild(repliesEl);
     }
 
     container.appendChild(postEl);
   });
 }
 
-// 返信欄表示
-function openReplyArea(post, parentEl) {
-  const input = document.createElement("textarea");
-  input.placeholder = "返信を入力...";
-  input.style.marginTop = "10px";
-
-  const btn = document.createElement("button");
-  btn.textContent = "返信";
-  btn.onclick = () => {
-    const text = input.value.trim();
-    if (!text) return;
-    post.replies.push({
-      text,
-      time: new Date().toLocaleString(),
-      from: userId
-    });
-
-    replyNotice[post.id] = true;
-    localStorage.setItem("replyNotice", JSON.stringify(replyNotice));
-    savePosts();
-    switchView(currentView);
-  };
-
-  parentEl.appendChild(input);
-  parentEl.appendChild(btn);
-}
-
-// 自分がいいねした投稿を見る
 function showLikedPosts() {
   document.getElementById("viewContainer").style.display = "none";
   document.getElementById("likedPostsContainer").style.display = "block";
 
   const likedList = document.getElementById("likedPostsList");
   likedList.innerHTML = "";
-
   const posts = allPosts.filter(p => likedPostIds.includes(p.id));
   renderPosts(posts, likedList);
 }
 
-// 戻るボタン
 function backToReactions() {
   document.getElementById("likedPostsContainer").style.display = "none";
   switchView("mine");
 }
 
-// メッセージ画面表示
 function renderMessages(posts, container) {
   container.innerHTML = "";
   posts.forEach(post => {
@@ -402,18 +324,7 @@ function renderMessages(posts, container) {
   });
 }
 
-// 初期表示
 switchView("all");
-
-// 🔴 未読通知バッジ
-const myReplyPosts = allPosts.filter(p => p.userId === userId && p.replies.length > 0);
-let unreadCount = 0;
-myReplyPosts.forEach(p => {
-  if (replyNotice[p.id]) unreadCount++;
-});
-if (unreadCount > 0) {
-  document.getElementById("messageTab").innerHTML = "💌 メッセージ 🔴";
-}
 
   </script>
 
