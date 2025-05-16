@@ -1,314 +1,420 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>投稿アプリ（BGM付き＋音量調整＋停止ボタン）</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>匿名つぶやきアプリ</title>
   <style>
+    /* ★ 次のパート2でCSSを入れる */
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    textarea, select {
-      width: 100%;
-      padding: 8px;
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
+  font-family: sans-serif;
+  margin: 0;
+  padding-bottom: 80px; /* ナビバーぶん余白 */
+  background: #f9f9f9;
+}
 
-    .post-btn {
-      padding: 10px 20px;
-      font-size: 18px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 5px;
-    }
-    .post-btn:hover {
-      background-color: #45a049;
-    }
+textarea {
+  font-size: 16px;
+}
 
-    .container {
-      display: flex;
-      gap: 20px;
-      margin-top: 20px;
-    }
-    .column {
-      width: 33%;
-      background-color: #f9f9f9;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 10px;
-      overflow-y: auto;
-    }
-    .post {
-      background: white;
-      padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .reply {
-      background: #f0f0f0;
-      margin-top: 6px;
-      padding: 6px;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    .disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-    .like-btn {
-      margin-top: 6px;
-      display: inline-block;
-      background-color: #ffd700;
-      color: black;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 14px;
-      cursor: pointer;
-      border: none;
-    }
+button {
+  font-size: 16px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+}
 
-    .bgm-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
+button:hover {
+  background-color: #45a049;
+}
 
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
-      }
-      .column {
-        width: 100%;
-      }
-      textarea, select {
-        font-size: 18px;
-      }
-      .like-btn {
-        font-size: 16px;
-      }
-      .post-btn {
-        width: 100%;
-        font-size: 20px;
-      }
-    }
+.post {
+  background: white;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.post-meta {
+  font-size: 12px;
+  color: #555;
+}
+
+.reply {
+  margin-top: 10px;
+  margin-left: 20px;
+  background: #eee;
+  border-radius: 4px;
+  padding: 6px;
+}
+
+.like-btn {
+  background-color: #ffd700;
+  color: black;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+.delete-btn {
+  background-color: #d9534f;
+  margin-left: 10px;
+}
+
+.reaction-summary {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.reaction-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.badge {
+  background: red;
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  margin-left: 5px;
+}
+
+/* ナビボタン特化 */
+#nav button {
+  background-color: transparent;
+  border: none;
+  color: #333;
+  font-size: 18px;
+  flex: 1;
+}
+
+#nav button.active {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  textarea {
+    font-size: 18px;
+  }
+
+  button {
+    font-size: 18px;
+  }
+
+  #nav button {
+    font-size: 20px;
+  }
+}
+
   </style>
 </head>
 <body>
 
-  <h1>投稿アプリ（BGM付き）</h1>
-
-  <!-- ✅ BGM 再生＆音量コントロール -->
-  <div class="bgm-controls">
-    <button id="toggleBgm">再生🎵</button>
-    <label for="volume">音量</label>
-    <input type="range" id="volume" min="0" max="1" step="0.01" value="0.5">
+  <!-- 🎵 BGM プレイヤー -->
+  <audio id="bgm" loop>
+    <source src="人狼の為の子守唄.mp3" type="audio/mp3" />
+    あなたのブラウザは audio タグをサポートしていません。
+  </audio>
+  <div style="padding: 5px;">
+    🔊 BGM:
+    <button onclick="toggleBgm()">▶ / ⏸</button>
+    <input type="range" min="0" max="1" step="0.01" value="0.5" onchange="setVolume(this.value)">
   </div>
-  <audio id="bgm" src="人狼の為の子守唄.mp3" loop></audio>
 
-  <textarea id="inputText" placeholder="つぶやいてみよう！"></textarea><br>
-  <select id="replySetting">
-    <option value="true">返信を受け付ける</option>
-    <option value="false">返信を受け付けない</option>
-  </select><br>
-  <button class="post-btn" onclick="submitPost()">投稿</button>
+  <!-- 📝 投稿フォーム -->
+  <div id="postForm" style="padding: 10px;">
+    <textarea id="inputText" placeholder="つぶやいてみよう！" rows="3" style="width: 100%;"></textarea>
+    <select id="replySetting" style="width: 100%; margin-top: 5px;">
+      <option value="true">返信を受け付ける</option>
+      <option value="false">返信を受け付けない</option>
+    </select>
+    <button onclick="submitPost()" style="margin-top: 5px; width: 100%;">投稿</button>
+  </div>
 
-  <div class="container">
-    <div class="column">
-      <h3>🌍 みんなのつぶやき</h3>
-      <div id="allPosts"></div>
-    </div>
-    <div class="column">
-      <h3>🧑‍💬 自分のつぶやき</h3>
-      <div id="myPosts"></div>
-    </div>
-    <div class="column">
-      <h3>💬 返信欄</h3>
-      <div id="replyArea">投稿をクリックして返信しよう！</div>
-    </div>
+  <!-- 🗨️ 表示エリア -->
+  <div id="viewContainer" style="padding: 10px;"></div>
+
+  <!-- ⭐ 自分がいいねした投稿一覧（リアクション→ボタンで遷移） -->
+  <div id="likedPostsContainer" style="display:none; padding:10px;">
+    <h3>⭐ 自分がいいねした投稿</h3>
+    <div id="likedPostsList"></div>
+    <button onclick="backToReactions()">← リアクションへ戻る</button>
+  </div>
+
+  <!-- 🔻 ナビゲーション -->
+  <div id="nav" style="position: fixed; bottom: 0; left: 0; width: 100%; display: flex; justify-content: space-around; background: #eee; padding: 10px 0;">
+    <button onclick="switchView('all')">🗨️ つぶやき</button>
+    <button onclick="switchView('mine')">🌟 リアクション</button>
+    <button onclick="switchView('messages')" id="messageTab">💌 メッセージ</button>
   </div>
 
   <script>
-    const bgm = document.getElementById("bgm");
-    const toggleBtn = document.getElementById("toggleBgm");
-    const volumeSlider = document.getElementById("volume");
+    // ★ パート3・4でスクリプトを入れる
+    // 自分のユーザーID（保存＆読み込み）
+let userId = localStorage.getItem("userId");
+if (!userId) {
+  userId = crypto.randomUUID();
+  localStorage.setItem("userId", userId);
+}
 
-    let isPlaying = false;
+// 投稿データの読み込み
+let allPosts = [];
+try {
+  allPosts = JSON.parse(localStorage.getItem("allPosts")) || [];
+} catch {
+  allPosts = [];
+}
 
-    toggleBtn.addEventListener("click", () => {
-      if (isPlaying) {
-        bgm.pause();
-        toggleBtn.textContent = "再生🎵";
-      } else {
-        bgm.play();
-        toggleBtn.textContent = "停止⏸️";
-      }
-      isPlaying = !isPlaying;
-    });
+// 自分が⭐した投稿IDリスト
+let likedPostIds = JSON.parse(localStorage.getItem("likedPostIds") || "[]");
 
-    volumeSlider.addEventListener("input", () => {
-      bgm.volume = volumeSlider.value;
-    });
+// 未読返信・未読リアクション記録
+let replyNotice = JSON.parse(localStorage.getItem("replyNotice") || "{}");
+let likeNotice = JSON.parse(localStorage.getItem("likeNotice") || "{}");
 
-    let userId = localStorage.getItem("userId");
-    if (!userId) {
-      userId = crypto.randomUUID();
-      localStorage.setItem("userId", userId);
+// 音量設定
+const bgm = document.getElementById("bgm");
+bgm.volume = 0.5;
+function toggleBgm() {
+  if (bgm.paused) {
+    bgm.play();
+  } else {
+    bgm.pause();
+  }
+}
+function setVolume(value) {
+  bgm.volume = parseFloat(value);
+}
+
+// 投稿する
+function submitPost() {
+  const input = document.getElementById("inputText");
+  const replyOption = document.getElementById("replySetting");
+  const text = input.value.trim();
+  if (text === "") return;
+
+  const post = {
+    id: Date.now().toString(),
+    text,
+    time: new Date().toLocaleString(),
+    userId,
+    canReply: replyOption.value === "true",
+    replies: [],
+    likes: 0,
+    likesBy: []
+  };
+
+  allPosts.unshift(post);
+  savePosts();
+  input.value = "";
+  switchView(currentView); // 再描画
+}
+
+// 投稿保存
+function savePosts() {
+  localStorage.setItem("allPosts", JSON.stringify(allPosts));
+}
+let currentView = "all";
+
+// メイン画面の表示切り替え
+function switchView(view) {
+  currentView = view;
+
+  document.getElementById("viewContainer").style.display = "block";
+  document.getElementById("likedPostsContainer").style.display = "none";
+
+  const viewDiv = document.getElementById("viewContainer");
+  viewDiv.innerHTML = "";
+
+  // ナビボタンの選択表示
+  document.querySelectorAll("#nav button").forEach(btn => btn.classList.remove("active"));
+  if (view === "all") {
+    renderPosts(allPosts.filter(p => p.userId !== userId), viewDiv);
+    document.querySelector("#nav button:nth-child(1)").classList.add("active");
+  } else if (view === "mine") {
+    const myPosts = allPosts.filter(p => p.userId === userId);
+    let totalLikes = myPosts.reduce((sum, p) => sum + p.likes, 0);
+
+    const topBar = document.createElement("div");
+    topBar.className = "reaction-topbar";
+    topBar.innerHTML = `<div class="reaction-summary">これまでのリアクション：⭐${totalLikes}</div>
+      <button onclick="showLikedPosts()">💫受信履歴</button>`;
+    viewDiv.appendChild(topBar);
+
+    renderPosts(myPosts, viewDiv);
+    document.querySelector("#nav button:nth-child(2)").classList.add("active");
+  } else if (view === "messages") {
+    const repliedToMe = allPosts.filter(p => p.userId === userId && p.replies.length > 0);
+    renderMessages(repliedToMe, viewDiv);
+    document.querySelector("#nav button:nth-child(3)").classList.add("active");
+
+    // 未読フラグを消す
+    document.getElementById("messageTab").innerHTML = "💌 メッセージ";
+    localStorage.setItem("replyNotice", "{}");
+  }
+}
+
+// 投稿一覧表示
+function renderPosts(posts, container) {
+  container.innerHTML = "";
+
+  posts.forEach(post => {
+    const postEl = document.createElement("div");
+    postEl.className = "post";
+
+    const header = document.createElement("div");
+    header.className = "post-header";
+    header.innerHTML = `
+      <div><strong>${post.text}</strong></div>
+      <div class="post-meta">${post.time}</div>
+    `;
+    postEl.appendChild(header);
+
+    const likeBtn = document.createElement("button");
+    likeBtn.className = "like-btn";
+    likeBtn.textContent = `⭐ ${post.likes}`;
+    if (post.likesBy.includes(userId)) {
+      likeBtn.disabled = true;
+      likeBtn.style.opacity = 0.6;
     }
-
-    let allPosts = [];
-    try {
-      allPosts = JSON.parse(localStorage.getItem("allPosts")) || [];
-    } catch (e) {
-      allPosts = [];
-    }
-
-    let selectedPost = null;
-
-    function savePosts() {
-      localStorage.setItem("allPosts", JSON.stringify(allPosts));
-    }
-
-    function submitPost() {
-      const input = document.getElementById("inputText");
-      const replyOption = document.getElementById("replySetting");
-      const text = input.value.trim();
-      if (text === "") return;
-
-      const post = {
-        id: Date.now().toString(),
-        text: text,
-        time: new Date().toLocaleString(),
-        userId: userId,
-        canReply: replyOption.value === "true",
-        replies: [],
-        likes: 0
-      };
-
-      allPosts.unshift(post);
-      input.value = "";
+    likeBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (post.likesBy.includes(userId)) return;
+      post.likes++;
+      post.likesBy.push(userId);
+      likedPostIds.push(post.id);
+      likeNotice[post.id] = true;
+      localStorage.setItem("likedPostIds", JSON.stringify(likedPostIds));
+      localStorage.setItem("likeNotice", JSON.stringify(likeNotice));
       savePosts();
-      renderPosts();
-    }
+      switchView(currentView);
+    };
+    postEl.appendChild(likeBtn);
 
-    function renderPosts() {
-      const allDiv = document.getElementById("allPosts");
-      const myDiv = document.getElementById("myPosts");
-      allDiv.innerHTML = "";
-      myDiv.innerHTML = "";
-
-      let likedPosts = [];
-      try {
-        likedPosts = JSON.parse(localStorage.getItem("likedPosts") || "[]");
-      } catch (e) {
-        likedPosts = [];
-      }
-
-      allPosts.forEach(post => {
-        const postEl = document.createElement("div");
-        postEl.className = "post";
-        postEl.innerHTML = `
-          <strong>${post.text}</strong><br>
-          <small>${post.time}</small><br>
-          <em>${post.canReply ? "✉️ 返信可" : "🔒 返信不可"}</em><br>
-        `;
-
-        const likeBtn = document.createElement("button");
-        likeBtn.className = "like-btn";
-        likeBtn.textContent = `⭐ ${post.likes}`;
-
-        const alreadyLiked = likedPosts.includes(post.id);
-
-        if (alreadyLiked) {
-          likeBtn.disabled = true;
-          likeBtn.style.opacity = 0.6;
-          likeBtn.style.cursor = "not-allowed";
-          likeBtn.title = "1回しか押せません";
-        }
-
-        likeBtn.onclick = (e) => {
-          e.stopPropagation();
-          if (alreadyLiked) return;
-          post.likes++;
-          likedPosts.push(post.id);
-          localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
+    if (post.userId === userId) {
+      const delBtn = document.createElement("button");
+      delBtn.className = "delete-btn";
+      delBtn.textContent = "🗑️";
+      delBtn.onclick = () => {
+        if (confirm("本当に削除しますか？")) {
+          allPosts = allPosts.filter(p => p.id !== post.id);
           savePosts();
-          renderPosts();
-        };
-
-        postEl.appendChild(likeBtn);
-
-        if (post.canReply) {
-          postEl.onclick = () => openReplyArea(post);
-        } else {
-          postEl.classList.add("disabled");
-          postEl.onclick = () => alert("この投稿は返信を受け付けていません。");
-        }
-
-        if (post.userId === userId) {
-          myDiv.appendChild(postEl);
-        } else {
-          allDiv.appendChild(postEl);
-        }
-      });
-    }
-
-    function openReplyArea(post) {
-      selectedPost = post;
-      const area = document.getElementById("replyArea");
-      area.innerHTML = "";
-
-      const header = document.createElement("div");
-      header.innerHTML = `<strong>${post.text}</strong><br><small>${post.time}</small>`;
-      area.appendChild(header);
-
-      if (!post.canReply) {
-        const msg = document.createElement("p");
-        msg.textContent = "この投稿は返信できません。";
-        area.appendChild(msg);
-        return;
-      }
-
-      const input = document.createElement("textarea");
-      input.placeholder = "返信を入力...";
-      input.style.marginTop = "10px";
-
-      const btn = document.createElement("button");
-      btn.textContent = "返信";
-      btn.onclick = () => {
-        const replyText = input.value.trim();
-        if (replyText) {
-          post.replies.push({
-            text: replyText,
-            time: new Date().toLocaleString()
-          });
-          input.value = "";
-          savePosts();
-          openReplyArea(post);
+          switchView(currentView);
         }
       };
-
-      area.appendChild(input);
-      area.appendChild(btn);
-
-      if (post.replies.length > 0) {
-        post.replies.forEach(reply => {
-          const replyDiv = document.createElement("div");
-          replyDiv.className = "reply";
-          replyDiv.innerHTML = `<div>${reply.text}</div><small>${reply.time}</small>`;
-          area.appendChild(replyDiv);
-        });
-      }
+      postEl.appendChild(delBtn);
     }
 
-    renderPosts();
+    if (post.canReply) {
+      postEl.onclick = () => openReplyArea(post, postEl);
+    }
+
+    // 返信表示
+    if (post.replies.length > 0) {
+      const repliesEl = document.createElement("div");
+      post.replies.forEach(reply => {
+        const replyEl = document.createElement("div");
+        replyEl.className = "reply";
+        replyEl.innerHTML = `<div>${reply.text}</div><small>${reply.time}</small>`;
+        repliesEl.appendChild(replyEl);
+      });
+      postEl.appendChild(repliesEl);
+    }
+
+    container.appendChild(postEl);
+  });
+}
+
+// 返信欄表示
+function openReplyArea(post, parentEl) {
+  const input = document.createElement("textarea");
+  input.placeholder = "返信を入力...";
+  input.style.marginTop = "10px";
+
+  const btn = document.createElement("button");
+  btn.textContent = "返信";
+  btn.onclick = () => {
+    const text = input.value.trim();
+    if (!text) return;
+    post.replies.push({
+      text,
+      time: new Date().toLocaleString(),
+      from: userId
+    });
+
+    replyNotice[post.id] = true;
+    localStorage.setItem("replyNotice", JSON.stringify(replyNotice));
+    savePosts();
+    switchView(currentView);
+  };
+
+  parentEl.appendChild(input);
+  parentEl.appendChild(btn);
+}
+
+// 自分がいいねした投稿を見る
+function showLikedPosts() {
+  document.getElementById("viewContainer").style.display = "none";
+  document.getElementById("likedPostsContainer").style.display = "block";
+
+  const likedList = document.getElementById("likedPostsList");
+  likedList.innerHTML = "";
+
+  const posts = allPosts.filter(p => likedPostIds.includes(p.id));
+  renderPosts(posts, likedList);
+}
+
+// 戻るボタン
+function backToReactions() {
+  document.getElementById("likedPostsContainer").style.display = "none";
+  switchView("mine");
+}
+
+// メッセージ画面表示
+function renderMessages(posts, container) {
+  container.innerHTML = "";
+  posts.forEach(post => {
+    const postEl = document.createElement("div");
+    postEl.className = "post";
+    postEl.innerHTML = `<strong>${post.text}</strong><br><small>${post.time}</small>`;
+    post.replies.forEach(reply => {
+      const replyEl = document.createElement("div");
+      replyEl.className = "reply";
+      replyEl.innerHTML = `<div>${reply.text}</div><small>${reply.time}</small>`;
+      postEl.appendChild(replyEl);
+    });
+    container.appendChild(postEl);
+  });
+}
+
+// 初期表示
+switchView("all");
+
+// 🔴 未読通知バッジ
+const myReplyPosts = allPosts.filter(p => p.userId === userId && p.replies.length > 0);
+let unreadCount = 0;
+myReplyPosts.forEach(p => {
+  if (replyNotice[p.id]) unreadCount++;
+});
+if (unreadCount > 0) {
+  document.getElementById("messageTab").innerHTML = "💌 メッセージ 🔴";
+}
+
   </script>
 
 </body>
